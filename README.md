@@ -14,7 +14,7 @@ Ricardo Nacif @ [Avenue Code](http://www.avenuecode.com)
 
 *rjunior@avenuecode.com*
 
-Sep 30th, 2014
+Sep 25th, 2014
 
 ---
 
@@ -24,8 +24,8 @@ Sep 30th, 2014
   - External DSL Examples
   - Internal DSL Examples
  - Ruby Overview
-  - Blocks, Procs and Lambdas
   - Struct vs Class
+  - Blocks, Procs and Lambdas
   - How Self Works
   - class_eval
   - instance_eval
@@ -163,13 +163,39 @@ click_button 'Sign in'
  ##### Rails Routes
 
 ```ruby
-scope '/admin' do
-  resources :posts, :comments
+Rails.application.routes.draw do
+
+  match 'photos', to: 'photos#show', via: [:get, :post]
+
+end
+```
+
+---
+
+## Struct VS Class
+
+ - These two bellow define the *same thing*
+
+
+```ruby
+class User
+  attr_accessor :name, :age
+
+  def initialize name, age
+    @name = name
+    @age = age
+  end
+
 end
 
-match 'photos', to: 'photos#show', via: [:get, :post]
+```
 
 ```
+User = Struct.new(:name, :age)
+
+```
+
+
 
 ---
 
@@ -221,7 +247,25 @@ do_this_twice { puts "Hey guys!" }
  ##### Understanding blocks
 
 ```ruby
-def do_this_in_between
+def do_this_if_block
+  if block_given?
+    yield
+  else
+    puts 'no block was given'
+  end
+end
+
+```
+
+
+----
+
+
+## Blocks and Procs
+ ##### Understanding blocks
+
+```ruby
+def do_something_in_between
   puts 'Whatever code that is here, is going to be executed first' 
   yield
   puts 'And this after'
@@ -230,7 +274,7 @@ end
 ```
 
 ```ruby
-do_this_in_between { puts "This is what I passed in a block to the method" }
+do_something_in_between { puts "This is what I passed in a block to the method" }
 #=> "Whatever code that is here, is going to be executed first"
 #=> "This is what I passed in a block to the method"
 #=> "And this after"
@@ -244,15 +288,22 @@ do_this_in_between { puts "This is what I passed in a block to the method" }
  ##### Understanding blocks
 
 ```ruby
-def do_something_with_the_first_user
-  user = get_first_user #user = Struct.new(:name, :email).new('John', 'john@gmail.com')
-  yield(user)
+class User 
+    def initialize( name ) 
+         @name = name
+    end
+
+    def do_this_with_name 
+        yield( @name ) 
+    end
 end
 
-do_something_with_the_first_user do |user|
- user.email = "john_new_email@gmail.com"
- puts "Name: #{user.name}, email: #{user.email}"
+person = User.new("Oscar")
+person.do_this_with_name do |name|
+  puts "Hey, his name is #{name}"
 end
+
+
 
 ```
 
@@ -298,43 +349,18 @@ end
  ##### Converting Procs to Blocks
 
 ```ruby
-class Alphabetic
+class Alphabet
 
-  def each_letter(&block) #here it converts the block into a proc
+  def self.each_letter(&block) #here it converts the block into a proc
     ('A'..'Z').each(&block) #here it converts the proc back again to a block
   end
 
 end
 
+Alphabet.each_letter { |l| puts l }
+
 
 ```
-
----
-
-## Struct VS Class
-
- - These two bellow define the *same thing*
-
-
-```ruby
-Class User
-  attr_accessor :name, :age
-
-  def initialize name, age
-    @name = name
-    @age = age
-  end
-
-end
-
-```
-
-```
-User = Struct.new(:name, :age)
-
-```
-
-
 
 ---
 
@@ -352,12 +378,8 @@ User = Struct.new(:name, :age)
 
 ```ruby
 class User
-  
-  attr_accessor :name, :age
 
-  def name_and_age
-    "#{name}, #{age}"
-  end
+  attr_accessor :name
 
   def puts_self
     puts self
@@ -369,6 +391,9 @@ class User
 
 end
 
+user = User.new
+user.puts_self
+User.puts_self
 ```
 
 
@@ -431,17 +456,15 @@ user.name
 
 ```
 
----
+----
 ## instance_eval
 
  - You can also pass a block to it, and self will be referring to the object
 
 
 ```ruby
-class User
-  
+class User  
   attr_accessor :name, :age
-
 end
 
 user = User.new
@@ -543,6 +566,7 @@ end
 
 ```ruby
 Pizza = Struct.new(:vegetable, :sauce, :cheese, :sauce, :topping, :price)
+@pizza = Pizza.new
 
 def add_vegetable name
   @pizza.vegetable = name
@@ -600,7 +624,7 @@ end
 
 ```ruby
 class Pizza
-  attr_accessor :vegetable, :sauce, :cheese, :sauce, :toppings, :price
+  attr_accessor :name, :vegetable, :sauce, :cheese, :sauce, :toppings, :price
 
   def initialize name
     @name = name
@@ -652,11 +676,6 @@ class Menu
     @@pizzas
   end
 
-
-  def self.print
-    @@pizzas.each(&:to_s)
-    nil
-  end
 end
 
 
@@ -703,7 +722,7 @@ end
 ```ruby
 
 class Pizza
-  attr_accessor :vegetable, :sauce, :cheese, :sauce, :toppings, :price
+  attr_accessor :name, :vegetable, :sauce, :cheese, :sauce, :toppings, :price
 
   def initialize name
     @name = name
@@ -713,14 +732,14 @@ class Pizza
     @toppings = args
   end
 
+...
+
+private
   def method_missing method_name, *args
     method_name = method_name.to_s.split('add_')[1]
     self.send(method_name + "=", args[0])
   end
 
-  def set_price name
-    @price = name
-  end
 end
 
 ```
@@ -747,20 +766,10 @@ Menu.add_pizza('Peperoni').add_vegetable('tomatoes').add_sauce('curry').add_topp
 ```ruby
 
 class Pizza
-  attr_accessor :vegetable, :sauce, :cheese, :sauce, :toppings, :price
-
-  def initialize name
-    @name = name
-  end
-
+  attr_accessor :name, :vegetable, :sauce, :cheese, :sauce, :toppings, :price
+  ...
   def add_toppings *args
     @toppings = args
-    self
-  end
-
-  def method_missing method_name, *args
-    method_name = method_name.to_s.split('add_')[1]
-    self.send(method_name + "=", args[0])
     self
   end
 
@@ -768,6 +777,15 @@ class Pizza
     @price = name
     self
   end
+
+  private
+
+  def method_missing method_name, *args
+    method_name = method_name.to_s.split('add_')[1]
+    self.send(method_name + "=", args[0])
+    self
+  end
+
 end
 
 ```
@@ -795,10 +813,6 @@ class Menu
     @@pizzas
   end
 
-  def self.print
-    @@pizzas.each(&:to_s)
-    nil
-  end
 end
 
 
