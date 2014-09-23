@@ -51,7 +51,8 @@ You should just edit the source file at src/README.md - the one which stars with
 ## DSL - What and Why
 
  - DSL stands for *Domain Specific Language*
- - It's a programming language focused on a *particular domain* or *task*. It removes extra code for a particular task and allow you to get things done in a more direct way
+ - It's a programming language focused on a *particular domain* or *task*. 
+ - It removes extra code for a particular task
  - It increases *readability* for other people
  - Two types of DSL: External and Internal
 
@@ -155,20 +156,12 @@ click_button 'Sign in'
 
 ```
 
-----
+---
 
 
-## Internal DSL Examples
+## Ruby Overview
 
- ##### Rails Routes
-
-```ruby
-Rails.application.routes.draw do
-
-  match 'photos', to: 'photos#show', via: [:get, :post]
-
-end
-```
+  #### Let's review some Ruby's concepts
 
 ---
 
@@ -459,7 +452,7 @@ user.name
 ----
 ## instance_eval
 
- - You can also pass a block to it, and self will be referring to the object
+ - You can also pass a proc to it, and self will be referring to the object
 
 
 ```ruby
@@ -469,13 +462,13 @@ end
 
 user = User.new
 
-my_block = Proc.new { self.age = 12}
+my_proc = Proc.new { self.age = 12}
 
-my_block.call
+my_proc.call
 
 #=> undefined method `age=' for main:Object
 
-user.instance_eval &my_block
+user.instance_eval &my_proc
 
 user.age
 #=> 12
@@ -565,7 +558,7 @@ end
  #### Our first implementation
 
 ```ruby
-Pizza = Struct.new(:vegetable, :sauce, :cheese, :sauce, :topping, :price)
+Pizza = Struct.new(:vegetable, :cheese, :sauce, :topping, :price)
 @pizza = Pizza.new
 
 def add_vegetable name
@@ -624,7 +617,7 @@ end
 
 ```ruby
 class Pizza
-  attr_accessor :name, :vegetable, :sauce, :cheese, :sauce, :toppings, :price
+  attr_accessor :name, :vegetable, :cheese, :sauce, :toppings, :price
 
   def initialize name
     @name = name
@@ -707,6 +700,10 @@ class Pizza
     @cheese = name
   end
 
+  def set_price name
+    @price = name
+  end
+
   ...
 end
 
@@ -722,7 +719,7 @@ end
 ```ruby
 
 class Pizza
-  attr_accessor :name, :vegetable, :sauce, :cheese, :sauce, :toppings, :price
+  attr_accessor :name, :vegetable, :cheese, :sauce, :toppings, :price
 
   def initialize name
     @name = name
@@ -736,7 +733,7 @@ class Pizza
 
 private
   def method_missing method_name, *args
-    method_name = method_name.to_s.split('add_')[1]
+    method_name = method_name.to_s.split(/^add_|set_/)[1]
     self.send(method_name + "=", args[0])
   end
 
@@ -766,22 +763,17 @@ Menu.add_pizza('Peperoni').add_vegetable('tomatoes').add_sauce('curry').add_topp
 ```ruby
 
 class Pizza
-  attr_accessor :name, :vegetable, :sauce, :cheese, :sauce, :toppings, :price
-  ...
+  attr_accessor :name, :vegetable, :cheese, :sauce, :toppings, :price
+
   def add_toppings *args
     @toppings = args
-    self
-  end
-
-  def set_price name
-    @price = name
     self
   end
 
   private
 
   def method_missing method_name, *args
-    method_name = method_name.to_s.split('add_')[1]
+    method_name = method_name.to_s.split(/^add_|set_/)[1]
     self.send(method_name + "=", args[0])
     self
   end
@@ -852,8 +844,8 @@ class Pizza
 
   def method_missing method_name, *args
     method_name = method_name.to_s
-    if method_name =~ /^add_/
-      method_name = method_name.split('add_')[1]
+    if method_name =~ /^add_|set_/
+      method_name = method_name.split(/^add_|set_/)[1]
       self.send(method_name + "=", args[0])
     else
       @observations << method_name.gsub(/_/, ' ').capitalize
