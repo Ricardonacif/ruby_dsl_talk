@@ -14,7 +14,7 @@ Ricardo Nacif @ [Avenue Code](http://www.avenuecode.com)
 
 *rjunior@avenuecode.com*
 
-Sep 25th, 2014
+Sep 24th, 2014
 
 ---
 
@@ -29,6 +29,7 @@ Sep 25th, 2014
   - How Self Works
   - class_eval
   - instance_eval
+  - send
   - method_missing
 
 
@@ -476,6 +477,26 @@ user.age
 ```
 
 ---
+##send
+
+ - Invokes the method passed as a string or symbol
+
+
+```ruby
+class User
+  def hello(*args)
+    "Hello " + args.join(' ')
+  end
+end
+
+user = User.new
+puts user.send :hello
+
+```
+
+
+
+---
 
 
 ## method_missing
@@ -764,14 +785,9 @@ Menu.add_pizza('Peperoni').add_vegetable('tomatoes').add_sauce('curry').add_topp
 
 class Pizza
   attr_accessor :name, :vegetable, :cheese, :sauce, :toppings, :price
-  ...
+
   def add_toppings *args
     @toppings = args
-    self
-  end
-
-  def set_price name
-    @price = name
     self
   end
 

@@ -29,6 +29,7 @@ You should just edit the source file at src/README.md - the one which stars with
   - How Self Works
   - class_eval
   - instance_eval
+  - send
   - method_missing
 
 
@@ -474,6 +475,26 @@ user.age
 #=> 12
 
 ```
+
+---
+##send
+
+ - Invokes the method passed as a string or symbol
+
+
+```ruby
+class User
+  def hello(*args)
+    "Hello " + args.join(' ')
+  end
+end
+
+user = User.new
+puts user.send :hello
+
+```
+
+
 
 ---
 
